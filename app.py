@@ -14,15 +14,13 @@ def download():
     choice = request.form['choice']
     
     try:
-        save_path = os.path.expanduser("~/Downloads/DownloadedYT")  # Default to Downloads folder
-        cookies_path = '/c:/Users/dheer/Documents/work/YoutubeDownloader/cookies.txt'  # Path to your cookies.txt file
+        save_path = os.path.expanduser("~/Downloads")  # Default to Downloads folder
 
         ydl_opts = {}
         if choice == "1":
             ydl_opts = {
                 'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',
-                'outtmpl': os.path.join(save_path, '%(title)s.%(ext)s'),
-                'cookiefile': cookies_path
+                'outtmpl': os.path.join(save_path, '%(title)s.%(ext)s')
             }
         elif choice == "2":
             ydl_opts = {
@@ -32,8 +30,7 @@ def download():
                     'preferredcodec': 'mp3',
                     'preferredquality': '192',
                 }],
-                'outtmpl': os.path.join(save_path, '%(title)s.%(ext)s'),
-                'cookiefile': cookies_path
+                'outtmpl': os.path.join(save_path, '%(title)s.%(ext)s')
             }
         else:
             return jsonify({"error": "Invalid choice. Please select 1 or 2."}), 400
