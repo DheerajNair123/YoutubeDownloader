@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader</title>
+    <style>
+        /* General Styles */
+        :root {
+            --primary-bg-color: #242424;
+            --secondary-bg-color: #f3f3f3;
+            --primary-text-color: wheat;
+            --secondary-text-color: #333;
+            --button-bg-color: gold;
+            --button-hover-bg-color: #0056b3;
+            --progress-bar-bg-color: #4caf50;
+            --error-color: red;
+            --success-color: green;
+            --border-radius: 5px;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--primary-bg-color);
+            color: var(--primary-text-color);
+            margin: 0;
+            padding: 50px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #333;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-text-color);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--button-bg-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--button-bg-color);
+            color: white;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--button-hover-bg-color);
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            font-size: 16px;
+            text-align: center;
+            border-radius: var(--border-radius);
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: var(--error-color);
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: var(--success-color);
+            border: 1px solid #c3e6cb;
+        }
+
+        /* Circular Progress Bar */
+        .progress-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 20px auto;
+        }
+
+        .circle {
+            transform: rotate(-90deg);
+        }
+
+        .circle-bg {
+            fill: none;
+            stroke: #ddd;
+            stroke-width: 10;
+        }
+
+        .circle-progress {
+            fill: none;
+            stroke: var(--progress-bar-bg-color);
+            stroke-width: 10;
+            stroke-linecap: round;
+            stroke-dasharray: 440; /* Circumference of the circle */
+            stroke-dashoffset: 440;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            button {
+                padding: 10px;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YouTube Downloader</h1>
+        <form id="download-form">
+            <div class="form-group">
+                <label for="url">YouTube Video URL:</label>
+                <input type="text" id="url" name="url" required placeholder="Enter YouTube video URL">
+            </div>
+            <div class="form-group">
+                <label for="choice">Format:</label>
+                <select id="choice" name="choice" required>
+                    <option value="1">Video (MP4)</option>
+                    <option value="2">Audio (MP3)</option>
+                </select>
+            </div>
+            <button type="submit">Download</button>
+        </form>
+        <div id="message" class="message" style="display: none;"></div>
+
+        <!-- Circular Progress Bar -->
+        <div class="progress-container" id="progress-container">
+            <svg class="circle" viewBox="0 0 120 120" width="150" height="150">
+                <circle class="circle-bg" cx="60" cy="60" r="55"/>
+                <circle class="circle-progress" cx="60" cy="60" r="55"/>
+            </svg>
+            <div id="progress-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 20px; color: #fff;">0%</div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('download-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const url = document.getElementById('url').value;
+            const choice = document.getElementById('choice').value;
+            const messageDiv = document.getElementById('message');
+            const progressBar = document.getElementById('progress-container');
+            const progressText = document.getElementById('progress-text');
+            const circleProgress = document.querySelector('.circle-progress');
+    
+            messageDiv.style.display = 'none';
+            progressBar.style.display = 'block';
+            progressText.textContent = '0%';
+            circleProgress.style.strokeDashoffset = '440';
+    
+            fetch('https://your-render-app-name.onrender.com/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `url=${encodeURIComponent(url)}&choice=${encodeURIComponent(choice)}`,
+            })
+            .then(response => response.json())
+            .then(data => {
+                progressBar.style.display = 'none';
+                if (data.error) {
+                    messageDiv.style.display = 'block';
+                    messageDiv.classList.add('error');
+                    messageDiv.classList.remove('success');
+                    messageDiv.textContent = data.error;
+                } else {
+                    messageDiv.style.display = 'block';
+                    messageDiv.classList.add('success');
+                    messageDiv.classList.remove('error');
+                    messageDiv.textContent = data.message;
+                }
+            })
+            .catch(error => {
+                progressBar.style.display = 'none';
+                messageDiv.style.display = 'block';
+                messageDiv.classList.add('error');
+                messageDiv.classList.remove('success');
+                messageDiv.textContent = 'An unexpected error occurred.';
+            });
+    
+            // Simulate progress bar for demonstration purposes
+            let progress = 0;
+            const interval = setInterval(() => {
+                if (progress >= 100) {
+                    clearInterval(interval);
+                } else {
+                    progress += 10;
+                    const offset = 440 - (440 * progress) / 100;
+                    circleProgress.style.strokeDashoffset = offset;
+                    progressText.textContent = progress + '%';
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>
