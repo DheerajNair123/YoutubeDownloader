@@ -54,7 +54,7 @@ A lightweight and efficient YouTube Downloader built with Python, powered by yt-
 
 1. Run the script:
    ```bash
-   python main.py
+   python app.py
    ```
 2. Follow the on-screen instructions to download your desired video or audio.
 
@@ -62,7 +62,7 @@ A lightweight and efficient YouTube Downloader built with Python, powered by yt-
 
 ## 📂 Project Structure
 
-- `main.py`: Entry point of the application.
+- `app.py`: Entry point of the application.
 - `requirements.txt`: Lists all dependencies.
 - Additional scripts or modules (if any): Add descriptions as needed.
 
