@@ -1,6 +1,3 @@
-Here's an updated README file for your YouTube Downloader project, incorporating the specific libraries used:
-
----
 
 # YouTube Downloader
 
