@@ -181,65 +181,66 @@
             <div id="progress-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 20px; color: #fff;">0%</div>
         </div>
     </div>
+<script>
+document.getElementById('download-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    
+    const url = document.getElementById('url').value;
+    const choice = document.getElementById('choice').value;
+    const messageDiv = document.getElementById('message');
+    const progressContainer = document.getElementById('progress-container');
+    const progressText = document.getElementById('progress-text');
+    const circleProgress = document.querySelector('.circle-progress');
 
-    <script>
-        document.getElementById('download-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const url = document.getElementById('url').value;
-            const choice = document.getElementById('choice').value;
-            const messageDiv = document.getElementById('message');
-            const progressBar = document.getElementById('progress-container');
-            const progressText = document.getElementById('progress-text');
-            const circleProgress = document.querySelector('.circle-progress');
-    
-            messageDiv.style.display = 'none';
-            progressBar.style.display = 'block';
-            progressText.textContent = '0%';
-            circleProgress.style.strokeDashoffset = '440';
-    
-            fetch('https://your-render-app-name.onrender.com/download', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `url=${encodeURIComponent(url)}&choice=${encodeURIComponent(choice)}`,
-            })
-            .then(response => response.json())
-            .then(data => {
-                progressBar.style.display = 'none';
-                if (data.error) {
-                    messageDiv.style.display = 'block';
-                    messageDiv.classList.add('error');
-                    messageDiv.classList.remove('success');
-                    messageDiv.textContent = data.error;
-                } else {
-                    messageDiv.style.display = 'block';
-                    messageDiv.classList.add('success');
-                    messageDiv.classList.remove('error');
-                    messageDiv.textContent = data.message;
-                }
-            })
-            .catch(error => {
-                progressBar.style.display = 'none';
-                messageDiv.style.display = 'block';
-                messageDiv.classList.add('error');
-                messageDiv.classList.remove('success');
-                messageDiv.textContent = 'An unexpected error occurred.';
-            });
-    
-            // Simulate progress bar for demonstration purposes
-            let progress = 0;
-            const interval = setInterval(() => {
-                if (progress >= 100) {
-                    clearInterval(interval);
-                } else {
-                    progress += 10;
-                    const offset = 440 - (440 * progress) / 100;
-                    circleProgress.style.strokeDashoffset = offset;
-                    progressText.textContent = progress + '%';
-                }
-            }, 500);
+    messageDiv.style.display = 'none';
+    progressContainer.style.display = 'block';
+    updateProgress(0);
+
+    try {
+        const res = await fetch("/download", {
+            method: "POST",
+            body: new URLSearchParams({ url, choice })
         });
-    </script>
+
+        if (!res.ok) {
+            const err = await res.json();
+            showMessage(err.error || "Download failed", true);
+            return;
+        }
+
+        const blob = await res.blob();
+        const fileName = res.headers.get("Content-Disposition")
+                            ?.split("filename=")[1]?.replace(/"/g,"")
+                            || (choice == "1" ? "video.mp4" : "audio.mp3");
+
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        showMessage("Download completed ✅", false);
+
+    } catch (err) {
+        showMessage("Server error: " + err.message, true);
+    } finally {
+        progressContainer.style.display = 'none';
+    }
+
+    function updateProgress(percent) {
+        const offset = 440 - (440 * percent) / 100;
+        circleProgress.style.strokeDashoffset = offset;
+        progressText.textContent = percent + "%";
+    }
+
+    function showMessage(msg, isError) {
+        messageDiv.style.display = "block";
+        messageDiv.className = "message " + (isError ? "error" : "success");
+        messageDiv.textContent = msg;
+    }
+});
+</script>
+
 </body>
 </html>
