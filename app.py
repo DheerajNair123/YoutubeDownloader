@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, jsonify, send_file
 import os
 import yt_dlp
+from flask_cors import CORS  # ✅ import CORS
 
 app = Flask(__name__)
+CORS(app)  # ✅ enable for all routes
 
 @app.route('/')
 def index():
@@ -18,8 +20,6 @@ def download():
 
     try:
         temp_dir = "/tmp"
-
-        # Ensure temp directory exists
         os.makedirs(temp_dir, exist_ok=True)
 
         if choice == "1":
@@ -43,25 +43,19 @@ def download():
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
 
-        # Find the downloaded file
         files = os.listdir(temp_dir)
         title = info.get("title")
-
         downloaded = [f for f in files if title and title in f]
 
         if not downloaded:
             raise Exception("Downloaded file not found on server.")
 
         file_path = os.path.join(temp_dir, downloaded[0])
-
-        # Send file to user (browser will download and save it locally)
         return send_file(file_path, as_attachment=True)
 
     except Exception as e:
-        # Send exact server error to frontend
         return jsonify({"error": f"Server download failed: {str(e)}"}), 500
 
 
 if __name__ == "__main__":
-    # This will NOT run in production, Gunicorn will handle the app
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=False, host='0.0.0.0')
