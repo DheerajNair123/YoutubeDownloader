@@ -1,8 +1,6 @@
 services:
   - type: web
     name: youtubedownloader
-    env: python
-    buildCommand: |
-      apt-get update && apt-get install -y ffmpeg
-      pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    env: docker       
+    buildCommand: docker build -t youtubedownloader .
+    startCommand: docker run youtubedownloader
