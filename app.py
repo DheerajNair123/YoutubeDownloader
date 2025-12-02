@@ -22,16 +22,27 @@ def download():
         temp_dir = "/tmp"
         os.makedirs(temp_dir, exist_ok=True)
 
+        # ✅ Real browser headers (NO impersonate)
+        common_opts = {
+            'nocheckcertificate': True,
+            'quiet': False,
+            'no_warnings': False,
+            'headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0 Safari/537.36',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Referer': 'https://www.youtube.com/',
+                'Origin': 'https://www.youtube.com',
+                'Sec-Fetch-Mode': 'navigate'
+            }
+        }
+
         if choice == "1":
             ydl_opts = {
                 'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',
                 'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
-                'impersonate': 'chrome110',  # ✅ bypass bot blocking
-                'nocheckcertificate': True,
-                'headers': {  # ✅ PUT IT HERE
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110 Safari/537.36'
-                }
+                **common_opts
             }
+
         elif choice == "2":
             ydl_opts = {
                 'format': 'bestaudio/best',
@@ -41,26 +52,22 @@ def download():
                     'preferredquality': '192',
                 }],
                 'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
-                'impersonate': 'chrome110',  # ✅ bypass bot blocking
-                'nocheckcertificate': True,
-                'headers': {  # ✅ AND ALSO HERE
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110 Safari/537.36'
-                }
+                **common_opts
             }
+
         else:
             return jsonify({"error": "Invalid choice. Select 1 or 2"}), 400
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
 
-        # Detect the downloaded file safely
+        # ✅ Detect downloaded file
         files = os.listdir(temp_dir)
         title = info.get("title")
-
         downloaded = [f for f in files if title and title in f]
 
         if not downloaded:
-            raise Exception("Downloaded file not found on server.")
+            raise Exception("Downloaded file not found on server")
 
         file_path = os.path.join(temp_dir, downloaded[0])
         return send_file(file_path, as_attachment=True)
@@ -71,4 +78,3 @@ def download():
 
 if __name__ == "__main__":
     app.run(debug=False, host='0.0.0.0')
-
