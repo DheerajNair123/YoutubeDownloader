@@ -1,10 +1,10 @@
 from flask import Flask, render_template, request, jsonify, send_file
 import os
 import yt_dlp
-from flask_cors import CORS  # ✅ import CORS
+from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # ✅ enable for all routes
+CORS(app)
 
 @app.route('/')
 def index():
@@ -25,7 +25,9 @@ def download():
         if choice == "1":
             ydl_opts = {
                 'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',
-                'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s')
+                'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
+                'impersonate': 'chrome110',  # ✅ bypass bot blocking
+                'nocheckcertificate': True,
             }
         elif choice == "2":
             ydl_opts = {
@@ -35,16 +37,20 @@ def download():
                     'preferredcodec': 'mp3',
                     'preferredquality': '192',
                 }],
-                'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s')
+                'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
+                'impersonate': 'chrome110',  # ✅ bypass bot blocking
+                'nocheckcertificate': True,
             }
         else:
-            return jsonify({"error": "Invalid choice. Select 1 (MP4) or 2 (MP3)"}), 400
+            return jsonify({"error": "Invalid choice. Select 1 or 2"}), 400
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
 
+        # Detect the downloaded file safely
         files = os.listdir(temp_dir)
         title = info.get("title")
+
         downloaded = [f for f in files if title and title in f]
 
         if not downloaded:
