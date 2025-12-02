@@ -1,6 +1,6 @@
 services:
   - type: web
     name: youtubedownloader
-    env: docker       
-    buildCommand: docker build -t youtubedownloader .
-    startCommand: docker run youtubedownloader
+    env: docker
+    dockerfilePath: Dockerfile
+    startCommand: gunicorn app:app
