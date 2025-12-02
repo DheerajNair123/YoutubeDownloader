@@ -10,12 +10,17 @@ def index():
 
 @app.route('/download', methods=['POST'])
 def download():
-    url = request.form['url']
-    choice = request.form['choice']
+    url = request.form.get('url')
+    choice = request.form.get('choice')
+
+    if not url:
+        return jsonify({"error": "No URL provided"}), 400
 
     try:
         temp_dir = "/tmp"
-        ydl_opts = {}
+
+        # Ensure temp directory exists
+        os.makedirs(temp_dir, exist_ok=True)
 
         if choice == "1":
             ydl_opts = {
@@ -33,22 +38,30 @@ def download():
                 'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s')
             }
         else:
-            return jsonify({"error": "Invalid choice. Select 1 or 2"}), 400
+            return jsonify({"error": "Invalid choice. Select 1 (MP4) or 2 (MP3)"}), 400
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info)
 
-            if choice == "2":
-                filename = filename.replace(".webm", ".mp3").replace(".m4a", ".mp3")
+        # Find the downloaded file
+        files = os.listdir(temp_dir)
+        title = info.get("title")
 
-        return send_file(filename, as_attachment=True)
+        downloaded = [f for f in files if title and title in f]
+
+        if not downloaded:
+            raise Exception("Downloaded file not found on server.")
+
+        file_path = os.path.join(temp_dir, downloaded[0])
+
+        # Send file to user (browser will download and save it locally)
+        return send_file(file_path, as_attachment=True)
 
     except Exception as e:
-        return jsonify({"error": f"Unexpected server error: {str(e)}"}), 500
-
+        # Send exact server error to frontend
+        return jsonify({"error": f"Server download failed: {str(e)}"}), 500
 
 
 if __name__ == "__main__":
+    # This will NOT run in production, Gunicorn will handle the app
     app.run(debug=True, host='0.0.0.0')
-
