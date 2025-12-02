@@ -28,6 +28,9 @@ def download():
                 'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
                 'impersonate': 'chrome110',  # ✅ bypass bot blocking
                 'nocheckcertificate': True,
+                'headers': {  # ✅ PUT IT HERE
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110 Safari/537.36'
+                }
             }
         elif choice == "2":
             ydl_opts = {
@@ -40,6 +43,9 @@ def download():
                 'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
                 'impersonate': 'chrome110',  # ✅ bypass bot blocking
                 'nocheckcertificate': True,
+                'headers': {  # ✅ AND ALSO HERE
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110 Safari/537.36'
+                }
             }
         else:
             return jsonify({"error": "Invalid choice. Select 1 or 2"}), 400
@@ -65,3 +71,4 @@ def download():
 
 if __name__ == "__main__":
     app.run(debug=False, host='0.0.0.0')
+
