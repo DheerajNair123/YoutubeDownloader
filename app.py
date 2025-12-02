@@ -45,8 +45,10 @@ def download():
         return send_file(filename, as_attachment=True)
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Unexpected server error: {str(e)}"}), 500
+
 
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
+
