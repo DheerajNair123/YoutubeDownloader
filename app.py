@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return render_template('indextrail.html')
+    return render_template('indextrial.html')
 
 @app.route('/download', methods=['POST'])
 def download():
@@ -47,3 +47,4 @@ def download():
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
+
