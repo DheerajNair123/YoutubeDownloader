@@ -4,109 +4,189 @@ import subprocess
 
 app = Flask(__name__)
 
-# Simple download folder
 DOWNLOAD_FOLDER = r"C:\Users\dheer\Downloads\DownloadedYT\newsongs"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
 @app.route('/')
 def home():
     return '''
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>YouTube Downloader</title>
-    </head>
-    <body>
-        <h2>YouTube Downloader</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YouTube Downloader</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: "Segoe UI", system-ui, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            background: radial-gradient(circle at top, #ffb6b6, #f06292);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            width: 420px;
+            padding: 28px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            color: #2b2b2b;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 18px;
+            font-weight: 700;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            font-size: 15px;
+        }
+
+        input, select {
+            background: rgba(255,255,255,0.9);
+        }
+
+        button {
+            background: linear-gradient(135deg, #ff4081, #ff6f61);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        }
+
+        #message {
+            margin-top: 18px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 14px;
+            font-size: 12px;
+            opacity: 0.75;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h2>🎵 YouTube Downloader</h2>
+
         <form id="downloadForm">
-            <input type="text" name="url" id="url" placeholder="Enter YouTube URL" size="40"><br><br>
-            <select name="choice" id="choice">
+            <input 
+                type="text" 
+                id="url" 
+                placeholder="Paste YouTube video URL here"
+                required
+            >
+
+            <select id="choice">
                 <option value="1">Download MP4 (Video)</option>
                 <option value="2">Download MP3 (Audio)</option>
-            </select><br><br>
-            <button type="submit">Download</button>
+            </select>
+
+            <button type="submit">Start Download</button>
         </form>
-        <div id="message" style="margin-top: 20px; font-weight: bold;"></div>
-        
-        <script>
-            document.getElementById('downloadForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const url = document.getElementById('url').value;
-                const choice = document.getElementById('choice').value;
-                const messageDiv = document.getElementById('message');
-                
-                messageDiv.textContent = 'Downloading... Please wait.';
-                messageDiv.style.color = 'blue';
-                
-                const formData = new FormData();
-                formData.append('url', url);
-                formData.append('choice', choice);
-                
-                try {
-                    const response = await fetch('/download', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.status.includes('done')) {
-                        messageDiv.textContent = result.status + ' ' + (result.message || '');
-                        messageDiv.style.color = 'green';
-                    } else {
-                        messageDiv.textContent = result.status + (result.error ? ': ' + result.error : '');
-                        messageDiv.style.color = 'red';
-                    }
-                } catch (error) {
-                    messageDiv.textContent = 'Error: ' + error.message;
-                    messageDiv.style.color = 'red';
-                }
+
+        <div id="message"></div>
+
+        <footer>
+            Created with ❤️ by Dheeraj Nair
+        </footer>
+    </div>
+
+<script>
+    document.getElementById('downloadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const url = document.getElementById('url').value;
+        const choice = document.getElementById('choice').value;
+        const message = document.getElementById('message');
+
+        message.textContent = "Downloading... please wait ⏳";
+        message.style.color = "#1e3a8a";
+
+        const formData = new FormData();
+        formData.append("url", url);
+        formData.append("choice", choice);
+
+        try {
+            const response = await fetch("/download", {
+                method: "POST",
+                body: formData
             });
-        </script>
-    </body>
-    </html>
-    '''
+
+            const result = await response.json();
+
+            if (result.status.includes("done")) {
+                message.textContent = "✅ " + result.message;
+                message.style.color = "green";
+            } else {
+                message.textContent = "❌ " + result.error;
+                message.style.color = "darkred";
+            }
+
+        } catch (err) {
+            message.textContent = "❌ Network error occurred";
+            message.style.color = "darkred";
+        }
+    });
+</script>
+</body>
+</html>
+'''
 
 @app.route('/download', methods=['POST'])
 def download():
     url = request.form.get('url')
     choice = request.form.get('choice')
-    
-    # Path to cookies file
+
     cookies_file = os.path.join(os.path.dirname(__file__), "cookies.txt")
-    
-    # Common options to avoid 403 errors
+
     common_opts = [
         "yt-dlp",
-        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         "--referer", "https://www.youtube.com/",
-        "--add-header", "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "--add-header", "Accept-Language:en-us,en;q=0.5",
-        "--add-header", "Sec-Fetch-Mode:navigate",
         "--extractor-args", "youtube:player_client=android",
-        "--no-check-certificate",
         "--no-warnings",
         "-o", DOWNLOAD_FOLDER + r"\%(title)s.%(ext)s"
     ]
-    
-    # Try to use cookies from browser first, then fall back to cookies.txt
+
     if os.path.exists(cookies_file):
         common_opts.extend(["--cookies", cookies_file])
     else:
-        # Try to extract cookies from Chrome browser
         common_opts.extend(["--cookies-from-browser", "chrome"])
 
-    if choice == '1':
-        cmd = common_opts + ["-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best", url]
+    if choice == "1":
+        cmd = common_opts + ["-f", "best[ext=mp4]", url]
     else:
         cmd = common_opts + ["-x", "--audio-format", "mp3", "--embed-thumbnail", url]
 
     try:
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-        return jsonify({"status": "Download done!", "message": "File saved to Downloads folder"})
+        subprocess.run(cmd, check=True, capture_output=True, text=True)
+        return jsonify({"status": "done", "message": "Download completed successfully"})
     except subprocess.CalledProcessError as e:
-        error_msg = e.stderr if e.stderr else str(e)
-        return jsonify({"status": "Download failed!", "error": error_msg})
+        return jsonify({"status": "failed", "error": e.stderr or "Unknown error"})
 
 app.run(host="0.0.0.0", port=5000, debug=True)
