@@ -5,21 +5,67 @@ import subprocess
 app = Flask(__name__)
 
 # Simple download folder
-DOWNLOAD_FOLDER = r"C:\Users\dheer\Downloads\DownloadedYT"  #add your destination(**IMPORTANT CHANGE THIS**)
+DOWNLOAD_FOLDER = r"C:\Users\dheer\Downloads\DownloadedYT\newsongs"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
 @app.route('/')
 def home():
     return '''
-    <h2>YouTube Downloader</h2>
-    <form action="/download" method="post">
-        <input type="text" name="url" placeholder="Enter YouTube URL" size="40"><br><br>
-        <select name="choice">
-            <option value="1">Download MP4 (Video)</option>
-            <option value="2">Download MP3 (Audio)</option>
-        </select><br><br>
-        <button type="submit">Download</button>
-    </form>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>YouTube Downloader</title>
+    </head>
+    <body>
+        <h2>YouTube Downloader</h2>
+        <form id="downloadForm">
+            <input type="text" name="url" id="url" placeholder="Enter YouTube URL" size="40"><br><br>
+            <select name="choice" id="choice">
+                <option value="1">Download MP4 (Video)</option>
+                <option value="2">Download MP3 (Audio)</option>
+            </select><br><br>
+            <button type="submit">Download</button>
+        </form>
+        <div id="message" style="margin-top: 20px; font-weight: bold;"></div>
+        
+        <script>
+            document.getElementById('downloadForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const url = document.getElementById('url').value;
+                const choice = document.getElementById('choice').value;
+                const messageDiv = document.getElementById('message');
+                
+                messageDiv.textContent = 'Downloading... Please wait.';
+                messageDiv.style.color = 'blue';
+                
+                const formData = new FormData();
+                formData.append('url', url);
+                formData.append('choice', choice);
+                
+                try {
+                    const response = await fetch('/download', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.status.includes('done')) {
+                        messageDiv.textContent = result.status + ' ' + (result.message || '');
+                        messageDiv.style.color = 'green';
+                    } else {
+                        messageDiv.textContent = result.status + (result.error ? ': ' + result.error : '');
+                        messageDiv.style.color = 'red';
+                    }
+                } catch (error) {
+                    messageDiv.textContent = 'Error: ' + error.message;
+                    messageDiv.style.color = 'red';
+                }
+            });
+        </script>
+    </body>
+    </html>
     '''
 
 @app.route('/download', methods=['POST'])
