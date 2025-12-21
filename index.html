@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>YouTube Downloader</title>
+
+<style>
+body {
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at top, #ffb6b6, #f06292);
+    font-family: system-ui;
+}
+
+.card {
+    width: 420px;
+    padding: 26px;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(14px);
+    border-radius: 18px;
+}
+
+input, select, button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 12px;
+    border-radius: 10px;
+    border: none;
+}
+
+button {
+    background: linear-gradient(135deg, #ff4081, #ff6f61);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.progress {
+    margin-top: 16px;
+    height: 14px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 10px;
+    overflow: hidden;
+    display: none;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+    transition: width 0.2s ease;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h2>🎵 YouTube Downloader</h2>
+
+    <input id="url" placeholder="Paste YouTube URL">
+    <select id="choice">
+        <option value="1">MP4 Video</option>
+        <option value="2">MP3 Audio</option>
+    </select>
+
+    <button onclick="startDownload()">Start Download</button>
+
+    <div class="progress" id="progressBox">
+        <div class="progress-bar" id="bar"></div>
+    </div>
+</div>
+
+<script>
+function startDownload() {
+    const url = document.getElementById("url").value;
+    const choice = document.getElementById("choice").value;
+
+    const progressBox = document.getElementById("progressBox");
+    const bar = document.getElementById("bar");
+
+    progressBox.style.display = "block";
+    bar.style.width = "0%";
+
+    const source = new EventSource(
+        `/progress?url=${encodeURIComponent(url)}&choice=${choice}`
+    );
+
+    source.onmessage = (event) => {
+        bar.style.width = event.data + "%";
+        if (event.data === "100") {
+            source.close();
+        }
+    };
+}
+</script>
+
+</body>
+</html>
